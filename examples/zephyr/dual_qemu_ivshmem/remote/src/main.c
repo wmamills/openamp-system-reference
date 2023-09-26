@@ -41,10 +41,11 @@ void main(void)
 	}
 
 	/* Setup the endpoint, this will notify the host side and allow it
-	 * to finish the RPMsg communication estabilishement.
+	 * to finish the RPMsg communication estabilish *e* ment.
 	 */
 	int status = rpmsg_create_ept(&remote_ept, rpmsg_dev, "k", RPMSG_ADDR_ANY,
 			RPMSG_ADDR_ANY, endpoint_cb, rpmsg_service_unbind);
+
 	if (status != 0) {
 		printf("rpmsg_create_ept failed %d\n", status);
 		return;

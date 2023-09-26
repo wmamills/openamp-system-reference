@@ -32,11 +32,12 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define VIRTQUEUE_ID 1
 #endif
 
+#ifndef SHMEM_ADDR
+#error "You must specify a shared memory address. You can look at the host side and then pass it via 'west ... -t run -- -DCMAKE_C_FLAGS="-DSHMEM_ADDR=<SHMEM_ADDR>"'"
+#endif
+
 K_THREAD_STACK_DEFINE(ivshmem_ev_loop_stack, IVSHMEM_EV_LOOP_STACK_SIZE);
 static struct k_thread ivshmem_ev_loop_thread;
-
-static const struct device *ivshmem_dev =
-		DEVICE_DT_GET(DT_NODELABEL(ivshmem0));
 
 static metal_phys_addr_t shm_physmap[1];
 static struct metal_device shm_device = {
@@ -86,6 +87,18 @@ static uintptr_t tx_vring_base;
 static size_t shmem_size;
 static int remote_endpoint_dst_addr = -1;
 
+#define IRQ             0       /* GPIO Port A */
+#define IRQ_PRIO        2       /* Priority */
+#define IRQ_FLAGS       0       /* Not used in Arm */
+
+/*
+ * MMR-related addresses
+ */
+#define MMR_BASE_ADDRESS 0x400FF000
+
+volatile uint32_t *ivposition = (void *)(MMR_BASE_ADDRESS + 8);  /* IVPOSITION */
+volatile uint32_t *doorbell = (void *)(MMR_BASE_ADDRESS + 12);   /* DOORBELL */
+
 static unsigned char virtio_get_status(struct virtio_device *vdev)
 {
 #ifdef CONFIG_OPENAMP_MASTER
@@ -112,14 +125,17 @@ static void virtio_set_features(struct virtio_device *vdev,
 
 static void virtio_notify(struct virtqueue *vq)
 {
-	uint16_t peer_dest_id = ivshmem_get_id(ivshmem_dev);
+	uint16_t own_peer_id;
+	uint16_t peer_dest_id;
+
+	own_peer_id = *ivposition;
 #ifdef CONFIG_OPENAMP_MASTER
-	peer_dest_id += 1;
+	peer_dest_id = own_peer_id + 1;
 #else
-	peer_dest_id -= 1;
+	peer_dest_id = own_peer_id - 1;
 #endif
-	LOG_DBG("sending notification to the peer id 0x%x\n", peer_dest_id);
-	ivshmem_int_peer(ivshmem_dev, peer_dest_id, 0);
+	LOG_DBG("sending notification to the peer id %0x\n", peer_dest_id);
+	*doorbell = peer_dest_id;
 }
 
 struct virtio_dispatch dispatch = {
@@ -148,40 +164,19 @@ static void ivshmem_event_loop_thread(void *p1, void *p2, void *p3)
 	ARG_UNUSED(p2);
 	ARG_UNUSED(p3);
 
-	/* k_poll was signaled or not */
-	unsigned int poll_signaled;
-	/* vector received */
-	int ivshmem_vector_rx;
-	int ret;
+	/* Empty, since notification is direct, so no k_poll is used and irqs are handled by gpio_portA_isr() */
+}
 
-	struct k_poll_signal sig;
+ISR_DIRECT_DECLARE(gpio_portA_isr)
+{
+    uint32_t vector_id;
 
-	struct k_poll_event events[] = {
-		K_POLL_EVENT_INITIALIZER(K_POLL_TYPE_SIGNAL,
-					 K_POLL_MODE_NOTIFY_ONLY,
-					 &sig),
-	};
+    vector_id = *doorbell >> 16;
+    printk("*** Got interrupt at vector %d, notifying vqueue ID %d\n", vector_id, VIRTQUEUE_ID);
 
-	k_poll_signal_init(&sig);
+    virtqueue_notification(vq[VIRTQUEUE_ID]);
 
-	ret = ivshmem_register_handler(ivshmem_dev, &sig, 0);
-
-	if (ret < 0) {
-		LOG_ERR("registering handlers must be supported: %d\n", ret);
-		k_panic();
-	}
-
-	while (1) {
-		LOG_DBG("%s: waiting interrupt from client...\n", __func__);
-		ret = k_poll(events, ARRAY_SIZE(events), K_FOREVER);
-
-		k_poll_signal_check(&sig, &poll_signaled, &ivshmem_vector_rx);
-		/* get ready for next signal */
-		k_poll_signal_reset(&sig);
-
-		/* notify receive Vqueue once cross interrupt is received */
-		virtqueue_notification(vq[VIRTQUEUE_ID]);
-	}
+    return 1;
 }
 
 int init_ivshmem_backend(void)
@@ -190,17 +185,20 @@ int init_ivshmem_backend(void)
 	struct metal_device *device;
 	struct metal_init_params metal_params = METAL_INIT_DEFAULTS;
 
-	if (!IS_ENABLED(CONFIG_IVSHMEM_DOORBELL)) {
-		LOG_ERR("CONFIG_IVSHMEM_DOORBELL is not enabled\n");
-		k_panic();
-	}
+	IRQ_DIRECT_CONNECT(IRQ, IRQ_PRIO, gpio_portA_isr, IRQ_FLAGS);
+	irq_enable(IRQ);
 
-	shmem_size = ivshmem_get_mem(ivshmem_dev, &shmem_base);
+	/*
+	 * shmem setup here
+	 */
+	shmem_size = 4 * 1024 * 1024 /* 4 MiB, default in ivshmem-server */;
+	shmem_base = SHMEM_ADDR;
+
 	shmem_size -= VDEV_STATUS_SIZE;
 	vdev_status_base = shmem_base;
 	shmem_base += VDEV_STATUS_SIZE;
 
-	LOG_DBG("Memory got from ivshmem: %p, size: %ld\n", (void *)shmem_base, shmem_size);
+	LOG_DBG("Memory got from ivshmem: %p, size: %d\n", (void *)shmem_base, shmem_size);
 
 	shm_device.regions[0].virt = (void *)(shmem_base);
 	shm_device.regions[0].size = shmem_size;

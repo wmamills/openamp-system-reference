@@ -75,44 +75,14 @@ build_zephyr(){
 	pv $ZEPHYR_SDK_SETUP_TAR -i 3 -ptebr -f | tar xJ || exit 1
 	rm -rf $ZEPHYR_SDK_INSTALL_DIR || exit 1
 	yes | ./$ZEPHYR_SDK_SETUP_DIR/setup.sh || exit 1
-	west init ./zephyrproject || exit 1
-	cd ./zephyrproject || exit 1
+	cd top || exit 1
+	west init -l ./openamp-system-reference || exit 1
 	west update --narrow || exit 1
 	west zephyr-export || exit 1
 	pip3 install --user -r ./zephyr/scripts/requirements.txt || exit 1
 
-	cd ./zephyr &&
-	source zephyr-env.sh &&
-	cd ../.. &&
-	# The prj.conf is mandatory for cmake execution, create a void file.
-	touch prj.conf &&
-	# Add dummy fields in the VERSION file to fix compatibility with Zephyr
-	# version.cmake file
- 	echo "PATCHLEVEL = 0" >>VERSION &&
- 	echo "VERSION_TWEAK = 0" >>VERSION &&
-	echo  "###### Build for qemu_cortex_m3 ######" &&
-	cmake . -DWITH_ZEPHYR=on -DBOARD=qemu_cortex_m3 -DWITH_TESTS=on -Bbuild-zephyr-m3 &&
-	cd build-zephyr-m3 &&
-	make VERBOSE=1 &&
-	cd .. &&
-	echo  "###### Build for qemu_cortex_a53 ######" &&
-	cmake . -DWITH_ZEPHYR=on -DBOARD=qemu_cortex_a53 -DWITH_TESTS=on -Bbuild-zephyr-a53 &&
-	cd build-zephyr-a53 &&
-	make VERBOSE=1 &&
-	cd .. &&
-	echo  "###### Build for qemu_xtensa ######" &&
-	cmake . -DWITH_ZEPHYR=on -DBOARD=qemu_xtensa -DWITH_TESTS=on -Bbuild-zephyr-xtensa &&
-	cd build-zephyr-xtensa &&
-	cd .. &&
-	echo  "###### Build for qemu_riscv64 ######" &&
-	cmake . -DWITH_ZEPHYR=on -DBOARD=qemu_riscv64 -DWITH_TESTS=on -Bbuild-zephyr-rscv64 &&
-	cd build-zephyr-rscv64 &&
-	make VERBOSE=1 &&
-	cd .. &&
-	echo  "###### Build for qemu_riscv32 ######" &&
-	cmake . -DWITH_ZEPHYR=on -DBOARD=qemu_riscv32 -DWITH_TESTS=on -Bbuild-zephyr-rscv32 &&
-	cd build-zephyr-rscv32 &&
-	make VERBOSE=1 &&
+	west build -p -b stm32mp157c_dk2 openamp-system-reference/examples/zephyr/rpmsg_multi_services || exit 1
+	west build -p -b kv260_r5        openamp-system-reference/examples/zephyr/rpmsg_multi_services || exit 1
 	exit 0
 }
 

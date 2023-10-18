@@ -93,7 +93,11 @@ setup_zephyr() {
 	# by the real manifest
 	west init
 	west update --narrow
-	west zephyr-export
+
+	# exporting zephyr cmake resources is not needed if you build in a
+	# zephyr workspace or define ZEPHYR_BASE
+	# Things are more predictable w/o this
+	# west zephyr-export
 
 	# now remove the manifest so we can supply our own in the build
 	# use a bit of a sanity test be we do this

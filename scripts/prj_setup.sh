@@ -13,9 +13,6 @@ ZEPHYR_SDK_DOWNLOAD_URL=$ZEPHYR_SDK_DOWNLOAD_FOLDER/$ZEPHYR_SDK_SETUP_TAR
 FREERTOS_ZIP_URL=https://cfhcable.dl.sourceforge.net/project/freertos/FreeRTOS/V10.0.1/FreeRTOSv10.0.1.zip
 
 pre_build(){
-	# fix issue related to tzdata install
-	echo 'Etc/UTC' > /etc/timezone &&
-	ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime &&
 	apt update &&
 	apt-get install -y make || exit 1
 	sudo pip3 install cmake || exit 1

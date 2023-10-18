@@ -75,7 +75,7 @@ setup_zephyr() {
 		device-tree-compiler ncurses-dev uglifyjs -qq
 
 	# Install things from python pip
-	sudo pip3 install pyelftools
+	pip3 install --user -U pyelftools
 	pip3 install --user -U west
 	echo 'export PATH=~/.local/bin:"$PATH"' >> ~/.bashrc
 	source ~/.bashrc

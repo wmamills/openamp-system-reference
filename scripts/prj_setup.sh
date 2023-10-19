@@ -16,8 +16,8 @@ ZEPHYR_SDK_DOWNLOAD_URL=$ZEPHYR_SDK_DOWNLOAD_FOLDER/$ZEPHYR_SDK_SETUP_TAR
 FREERTOS_ZIP_URL=https://cfhcable.dl.sourceforge.net/project/freertos/FreeRTOS/V10.0.1/FreeRTOSv10.0.1.zip
 
 setup_common() {
-	apt update
-	apt-get install -y make
+	sudo apt update
+	sudo apt-get install -y make git python3 python3-pip wget
 	sudo pip3 install cmake
 }
 

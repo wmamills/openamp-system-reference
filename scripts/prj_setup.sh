@@ -5,13 +5,16 @@ set -e
 
 readonly TARGET="$1"
 
+# Assume this for now
+HOSTOS=linux-x86_64
+
 ZEPHYR_TOOLCHAIN_VARIANT=zephyr
 #ZEPHYR_SDK_INSTALL_DIR=/opt/zephyr-sdk
 ZEPHYR_SDK_VERSION=0.16.1
-ZEPHYR_SDK_DOWNLOAD_FOLDER=https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v$ZEPHYR_SDK_VERSION
+ZEPHYR_SDK_FOLDER=https://github.com/zephyrproject-rtos/sdk-ng/releases/download
 ZEPHYR_SDK_SETUP_DIR=zephyr-sdk-$ZEPHYR_SDK_VERSION
-ZEPHYR_SDK_SETUP_TAR=${ZEPHYR_SDK_SETUP_DIR}_linux-x86_64.tar.xz
-ZEPHYR_SDK_DOWNLOAD_URL=$ZEPHYR_SDK_DOWNLOAD_FOLDER/$ZEPHYR_SDK_SETUP_TAR
+ZEPHYR_SDK_SETUP_TAR=${ZEPHYR_SDK_SETUP_DIR}_${HOSTOS}.tar.xz
+ZEPHYR_SDK_URL=$ZEPHYR_SDK_FOLDER/v$ZEPHYR_SDK_VERSION/$ZEPHYR_SDK_SETUP_TAR
 
 FREERTOS_ZIP_URL=https://cfhcable.dl.sourceforge.net/project/freertos/FreeRTOS/V10.0.1/FreeRTOSv10.0.1.zip
 
@@ -81,7 +84,7 @@ setup_zephyr() {
 	source ~/.bashrc
 
 	# Install the zephyr SDK
-	wget $ZEPHYR_SDK_DOWNLOAD_URL --dot-style=giga
+	wget $ZEPHYR_SDK_URL --dot-style=giga
 	echo "Extracting $ZEPHYR_SDK_SETUP_TAR"
 	pv $ZEPHYR_SDK_SETUP_TAR -i 3 -ptebr -f | tar xJ
 	#rm -rf $ZEPHYR_SDK_INSTALL_DIR

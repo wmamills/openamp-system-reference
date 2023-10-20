@@ -6,7 +6,7 @@ set -e
 readonly TARGET="$1"
 
 ZEPHYR_TOOLCHAIN_VARIANT=zephyr
-ZEPHYR_SDK_INSTALL_DIR=/opt/zephyr-sdk
+#ZEPHYR_SDK_INSTALL_DIR=/opt/zephyr-sdk
 ZEPHYR_SDK_VERSION=0.16.1
 ZEPHYR_SDK_DOWNLOAD_FOLDER=https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v$ZEPHYR_SDK_VERSION
 ZEPHYR_SDK_SETUP_DIR=zephyr-sdk-$ZEPHYR_SDK_VERSION
@@ -84,7 +84,7 @@ setup_zephyr() {
 	wget $ZEPHYR_SDK_DOWNLOAD_URL --dot-style=giga
 	echo "Extracting $ZEPHYR_SDK_SETUP_TAR"
 	pv $ZEPHYR_SDK_SETUP_TAR -i 3 -ptebr -f | tar xJ
-	rm -rf $ZEPHYR_SDK_INSTALL_DIR
+	#rm -rf $ZEPHYR_SDK_INSTALL_DIR
 	yes | ./$ZEPHYR_SDK_SETUP_DIR/setup.sh
 
 	# The users should be in the dir they want for the top level

@@ -118,13 +118,17 @@ setup_zephyr() {
 	pv $ZEPHYR_SDK_SETUP_TAR -i 3 -ptebr -f | tar xJ
 	#rm -rf $ZEPHYR_SDK_INSTALL_DIR
 	yes | ./$ZEPHYR_SDK_SETUP_DIR/setup.sh
+}
+
+precache_zephyr() {
+	echo  " Pre-cache zephyr for fast west init"
 
 	# The users should be in the dir they want for the top level
 	# Pre-clone the whole Zephyr workspace
 	# It is fine that we pre-clone main as the versions will get fixed up
 	# by the real manifest
 	west init
-	west update --narrow
+	west update
 
 	# exporting zephyr cmake resources is not needed if you build in a
 	# zephyr workspace or define ZEPHYR_BASE
@@ -132,7 +136,7 @@ setup_zephyr() {
 	# west zephyr-export
 
 	# now remove the manifest so we can supply our own in the build
-	# use a bit of a sanity test be we do this
+	# use a bit of a sanity test before we do this
 	if [ -d zephyr ]; then
 		rm -rf .west
 	fi

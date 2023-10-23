@@ -16,7 +16,11 @@ ZEPHYR_SDK_SETUP_DIR=zephyr-sdk-$ZEPHYR_SDK_VERSION
 ZEPHYR_SDK_SETUP_TAR=${ZEPHYR_SDK_SETUP_DIR}_${HOSTOS}.tar.xz
 ZEPHYR_SDK_URL=$ZEPHYR_SDK_FOLDER/v$ZEPHYR_SDK_VERSION/$ZEPHYR_SDK_SETUP_TAR
 
-FREERTOS_ZIP_URL=https://cfhcable.dl.sourceforge.net/project/freertos/FreeRTOS/V10.0.1/FreeRTOSv10.0.1.zip
+FREERTOS_VERSION=202212.01
+FREERTOS_GITHUB_FOLDER=https://github.com/FreeRTOS/FreeRTOS/releases/download/
+FREERTOS_DIR=FreeRTOSv${FREERTOS_VERSION}
+FREERTOS_FILE=FreeRTOSv${FREERTOS_VERSION}.zip
+FREERTOS_URL=${FREERTOS_GITHUB_FOLDER}/${FREERTOS_VERSION}/${FREERTOS_FILE}
 
 setup_common() {
 	sudo apt update
@@ -55,8 +59,9 @@ build_generic() {
 setup_freertos() {
 	echo  " Setup for freertos OS "
 	sudo apt-get install -y gcc-arm-none-eabi unzip
-	wget $FREERTOS_ZIP_URL --dot-style=giga > /dev/null
-	unzip FreeRTOSv10.0.1.zip > /dev/null
+	wget $FREERTOS_URL --dot-style=giga > /dev/null
+	echo  "   Extracting $FREERTOS_FILE"
+	unzip $FREERTOS_FILE > /dev/null
 }
 
 build_freertos() {

@@ -29,11 +29,15 @@ setup_linux() {
 	sudo apt-get install -y libsysfs-dev libhugetlbfs-dev gcc
 }
 
+# Build Linux examples for the native host
+# These will not do anything useful if your native host is not
+# OpenAMP enabled, but you can still build them
 build_linux() {
-	mkdir -p build-linux
-	cd build-linux
-	cmake .. -DWITH_TESTS_EXEC=on
-	make VERBOSE=1 all test
+	cd openamp-system-reference/examples/linux
+	make -C rpmsg-echo-test clean all
+	make -C rpmsg-mat-mul clean all
+	make -C rpmsg-proxy-app clean all
+	make -C rpmsg-utils clean all
 }
 
 setup_generic() {

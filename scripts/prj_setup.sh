@@ -65,6 +65,36 @@ build_freertos() {
 	make VERBOSE=1
 }
 
+ensure_local_bin() {
+	# ensure that ~/.local/bin is in the path
+
+	# Note1: some distros (Ubuntu for one) will add ~/.local/bin to the
+	# PATH in the system level (/etc/) rc files, but only if it already
+	# exists in the user home dir.  It is hard to count on that so we add
+	# it to the .bashrc file anyway but we make it conditional so it is not
+	# added twice
+
+	# Note2: many distros (Ubuntu included) test for an interactive shell
+	# at the top of the .bashrc and skip the rest of the file if not.
+	# We want ./local/bin in the path even for non-interactive shells and
+	# for containers and job VMs we can't rely on an interactive shell
+	# having already run.  So we add our bit at the top of .bashrc
+
+	NOW=$(date +%Y-%m-%d-%H:%M:%S)
+	cat > bashrc-header <<EOF
+		if ! echo $PATH | grep -q /.local/bin >/dev/null; then
+			export PATH="$HOME/.local/bin:$PATH"
+		fi
+EOF
+	if ! grep -q /.local/bin ~/.bashrc; then
+		mv ~/.bashrc ~/.bashrc.$NOW
+		cat bashrc-header ~/.bashrc.$NOW >~/.bashrc
+	fi
+
+	# now handle this shell
+	source bashrc-header
+}
+
 setup_zephyr() {
 	echo  " Setup for Zephyr OS "
 
@@ -78,10 +108,9 @@ setup_zephyr() {
 		device-tree-compiler ncurses-dev uglifyjs -qq
 
 	# Install things from python pip
+	ensure_local_bin
 	pip3 install --user -U pyelftools
 	pip3 install --user -U west
-	echo 'export PATH=~/.local/bin:"$PATH"' >> ~/.bashrc
-	source ~/.bashrc
 
 	# Install the zephyr SDK
 	wget $ZEPHYR_SDK_URL --dot-style=giga
@@ -114,6 +143,7 @@ setup_zephyr() {
 
 build_zephyr() {
 	echo  " Build for Zephyr OS "
+	ensure_local_bin
 
 	# The users should be in the top dir
 	# Clone the whole Zephyr workspace

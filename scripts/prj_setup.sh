@@ -151,14 +151,15 @@ build_zephyr() {
 
 	# The users should be in the top dir
 	# Clone the whole Zephyr workspace
-	west init -l ./openamp-system-reference
+	cd openamp-system-reference
+	west init -l .
 	west update --narrow
 
 	# Recheck python packages incase they have changed
-	pip3 install --user -r ./zephyr/scripts/requirements.txt
+	pip3 install --user -r ../zephyr/scripts/requirements.txt
 
-	west build -p -b stm32mp157c_dk2 openamp-system-reference/examples/zephyr/rpmsg_multi_services
-	west build -p -b kv260_r5        openamp-system-reference/examples/zephyr/rpmsg_multi_services
+	west build -p -b stm32mp157c_dk2 examples/zephyr/rpmsg_multi_services
+	west build -p -b kv260_r5        examples/zephyr/rpmsg_multi_services
 }
 
 main() {

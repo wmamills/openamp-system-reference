@@ -1,5 +1,17 @@
 #!/bin/bash
 
+# Setup a workspace to build RTOS applications for OpenAMP
+# Also support using your Linux native system as a "RTOS stand-in"
+
+# NOTE: As of now this is appropriate for containers and VMs
+# I would not want to run it on my real Linux system as of yet
+
+# TODO:
+# * check if steps are already done before doing them
+# * support split admin_setup from user_setup for people w/o sudo
+# * allow user to disallow sudo
+# * check if needed before doing sudo
+
 # fail on any error
 set -e
 

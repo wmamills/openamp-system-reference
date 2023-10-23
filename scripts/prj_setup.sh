@@ -65,13 +65,29 @@ setup_freertos() {
 }
 
 build_freertos() {
-	mkdir -p build-freertos
-	cd build-freertos export
-	cmake .. -DCMAKE_TOOLCHAIN_FILE=template-freertos \
-		-DCMAKE_C_FLAGS="-I$PWD/../FreeRTOSv10.0.1/FreeRTOS/Source/include/ \
-		-I$PWD/../FreeRTOSv10.0.1/FreeRTOS/Demo/CORTEX_STM32F107_GCC_Rowley \
-		-I$PWD/../FreeRTOSv10.0.1/FreeRTOS/Source/portable/GCC/ARM_CM3"
-	make VERBOSE=1
+	# Build the stock FreeRTOS Demos that are cross GCC & Makefile & QEMU
+	MY_CWD=$(pwd)
+	cd $FREERTOS_DIR/FreeRTOS/Demo
+	make -C CORTEX_M3_MPS2_QEMU_GCC
+	make -C CORTEX_MPS2_QEMU_IAR_GCC/build/gcc
+	make -C CORTEX_MPU_M3_MPS2_QEMU_GCC
+
+	# Build the stock FreeRTOS Demos that are Cmake based
+	cd $MY_CWD
+	if [ ! -e pico-sdk/pico_sdk_init.cmake ]; then
+		# Don't do recursive here as tinyusb has TON of submodule
+		# we don't need every usb hal know to man
+		git clone https://github.com/raspberrypi/pico-sdk.git
+		(cd pico-sdk; git submodule update)
+	fi
+
+	export PICO_SDK_PATH=$PWD/pico-sdk
+	mkdir -p build_freertos/rp2040
+	S=$FREERTOS_DIR/FreeRTOS/Demo/ThirdParty/Community-Supported/CORTEX_M0+_RP2040
+	B=build_freertos/rp2040
+	for i in Standard UsingCMSIS OnEitherCore; do
+		cmake -S $S/$1 -B $B/$i
+	done
 }
 
 ensure_local_bin() {

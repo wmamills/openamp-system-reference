@@ -13,6 +13,12 @@
 		zephyr,shell-uart = &uart1;
 		zephyr,ipc = &rpu0_apu_mailbox;
 		zephyr,ipc_shm = &rpu0_ipc_shm;
+
+		/* override zephyr for now until definitions can be fixed upstream */
+		zephyr,sram = &tcm_lockstep;
+
+		/* flash0 is QSPI XIP at offset 0 and is unlikely to be appropriate */
+		/delete-property/ zephyr,flash;
 	};
 
 	reserved-memory {
@@ -26,6 +32,13 @@
 			reg = <0x3ed40000 DT_SIZE_K(512)>;
 		};
 	};
+
+	soc {
+		tcm_lockstep: memory@0 {
+			compatible = "mmio-sram";
+			reg = <0 DT_SIZE_K(256)>;
+		};
+    };
 };
 
 &rpu0_ipi {

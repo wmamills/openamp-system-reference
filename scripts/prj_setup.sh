@@ -119,9 +119,9 @@ ensure_local_bin() {
 
 	NOW=$(date +%Y-%m-%d-%H:%M:%S)
 	cat > bashrc-header <<EOF
-		if ! echo $PATH | grep -q /.local/bin >/dev/null; then
-			export PATH="$HOME/.local/bin:$PATH"
-		fi
+if ! echo $PATH | grep -q /.local/bin >/dev/null; then
+    export PATH="$HOME/.local/bin:$PATH"
+fi
 EOF
 	if ! grep -q /.local/bin ~/.bashrc; then
 		mv ~/.bashrc ~/.bashrc.$NOW

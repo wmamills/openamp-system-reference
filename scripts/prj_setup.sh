@@ -201,6 +201,9 @@ build_zephyr() {
 
 main() {
 	case "$TARGET" in
+	setup_common)
+		setup_common
+		;;
 	setup_linux)
 		setup_common
 		setup_linux
@@ -217,12 +220,18 @@ main() {
 		setup_common
 		setup_zephyr
 		;;
+	precache_zephyr)
+		setup_common
+		setup_zephyr
+		precache_zephyr
+		;;
 	setup_all)
 		setup_common
 		setup_linux
 		setup_generic
 		setup_freertos
 		setup_zephyr
+		precache_zephyr
 		;;
 	linux)
 		build_linux

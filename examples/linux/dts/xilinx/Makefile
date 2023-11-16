@@ -64,11 +64,13 @@ zynqmp-sck-kv-g-revB.dtso: $(XILINX_DTS_DIR)/zynqmp-sck-kv-g-revB.dtso
 
 zcu102-openamp-lockstep.dtb: \
 	zynqmp-zcu102-rev1.0.dtb \
+	zynqmp-openamp.dtbo \
 	zcu102-openamp.dtbo
 	fdtoverlay -o $@ -i $(filter-out .linux-src-check,$^)
 
 zcu102-openamp-split.dtb: \
 	zynqmp-zcu102-rev1.0.dtb \
+	zynqmp-openamp.dtbo \
 	zcu102-openamp.dtbo \
 	zynqmp-split.dtbo
 	fdtoverlay -o $@ -i $(filter-out .linux-src-check,$^)
